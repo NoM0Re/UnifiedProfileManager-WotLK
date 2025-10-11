@@ -1,10 +1,4 @@
-## Interface: @toc-version-retail@
-## Interface-Retail: @toc-version-retail@
-## Interface-Classic: @toc-version-classic@
-## Interface-BCC: @toc-version-bcc@
-## Interface-Wrath: @toc-version-wrath@
-## Interface-Cata: @toc-version-cata@
-## Interface-Mists: @toc-version-mists@
+## Interface: 33000
 ## Title: Unified Profile Manager
 ## Notes: A simple overview of all addon profiles for addons that use AceDB
 ## Author: Numy
@@ -13,7 +7,7 @@
 ## AddonCompartmentFuncOnEnter: UnifiedProfileManager_OnAddonCompartmentEnter
 ## AddonCompartmentFuncOnLeave: UnifiedProfileManager_OnAddonCompartmentLeave
 ## IconTexture: Interface\Addons\UnifiedProfileManager\media\icon
-## Version: @project-version@
+## Version: 1.1.15
 ## X-Curse-Project-ID: 1033706
 ## X-Wago-ID: BKpq3XGE
 ## Category-enUS: Other
