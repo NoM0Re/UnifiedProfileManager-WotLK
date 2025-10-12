@@ -12,7 +12,7 @@ local MAJOR, MINOR = "LibVersionCheck-1.0", 3;
 local LibVersionCheck = LibStub:NewLibrary(MAJOR, MINOR);
 
 local timer = LibStub("AceTimer-3.0");
-timer:ScheduleTimer(function() LibStub(MAJOR):AutoRegister(embedAddonName); end, 0.01);
+timer:ScheduleTimer(function() LibStub(MAJOR):AutoRegister(embedAddonName); end, 0.1);
 
 if not LibVersionCheck then return; end
 local CTL = ChatThrottleLib;
@@ -46,11 +46,6 @@ do -- setup
     LibVersionCheck.playerVersions = LibVersionCheck.playerVersions or {};
 
     LibVersionCheck.onVersionChangedCallbacks = LibVersionCheck.onVersionChangedCallbacks or {};
-
-    if not LibVersionCheck.prefixRegistered then
-        RegisterAddonMessagePrefix(prefix);
-        LibVersionCheck.prefixRegistered = true;
-    end
 end
 
 --- @param addonName string

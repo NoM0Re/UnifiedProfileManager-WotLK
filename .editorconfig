@@ -14,4 +14,3 @@ trim_trailing_whitespace = false
 [.luacheckrc]
 indent_style = tab
 indent_size = 4
-

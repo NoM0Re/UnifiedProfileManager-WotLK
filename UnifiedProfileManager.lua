@@ -1,11 +1,57 @@
 local name, ns = ...;
 
+local timer = LibStub('AceTimer-3.0');
+local LDB = LibStub('LibDataBroker-1.1');
+local LDBIcon = LibStub('LibDBIcon-1.0');
 local AceDB = LibStub('AceDB-3.0');
 local AceDBOptions = LibStub('AceDBOptions-3.0');
 local AceConfig = LibStub('AceConfig-3.0');
 local AceConfigDialog = LibStub('AceConfigDialog-3.0');
 -- LibDualSpec does not load on non-SoD classic era
 local LibDualSpec = LibStub('LibDualSpec-1.0', true);
+
+-- Backport Functions
+local function noop()
+
+end
+
+local function Mixin(object, ...)
+  for i = 1, select("#", ...) do
+    local mixin = select(i, ...)
+    for k, v in pairs(mixin) do
+      object[k] = v
+    end
+  end
+  return object
+end
+
+local function tInvert(tbl)
+	local inverted = {};
+	for k, v in pairs(tbl) do
+		inverted[v] = k;
+	end
+	return inverted;
+end
+
+local function strcmputf8i(a,b)
+	a = tostring(a):lower()
+	b = tostring(b):lower()
+	if a==b then return 0 elseif a<b then return -1 else return 1 end
+end
+
+local function StripHyperlinks(s)
+  if type(s)~="string" then return s end
+  return (s:gsub("|H.-|h(.-)|h", "%1"))
+end
+
+local function CreateCounter(start)
+  start = start or 0;
+  local count = start - 1;
+  return function()
+    count = count + 1;
+    return count;
+  end
+end
 
 local function SortAddons(name1, name2)
   return strcmputf8i(StripHyperlinks(name1), StripHyperlinks(name2)) < 0;
@@ -58,22 +104,25 @@ UPM:SetScript('OnEvent', function(self, event, ...)
 end);
 UPM:RegisterEvent('ADDON_LOADED');
 
-do
-  function UnifiedProfileManager_OnAddonCompartmentClick()
-    UPM:OpenConfigUI();
-  end
-  function UnifiedProfileManager_OnAddonCompartmentEnter(_, button)
-    GameTooltip:SetOwner(button, 'ANCHOR_RIGHT');
-    GameTooltip:SetText('Unified Profile Manager');
-    GameTooltip:AddLine(CreateAtlasMarkup('NPE_LeftClick', 18, 18) .. ' to manage your profiles', 1, 1, 1);
-    GameTooltip:Show();
-  end
-  function UnifiedProfileManager_OnAddonCompartmentLeave()
-    GameTooltip:Hide();
-  end
+local broker
+if LDB then
+  broker = LDB:NewDataObject("UnifiedProfileManager", {
+    type  = "launcher",
+    icon  = ("Interface\\AddOns\\%s\\media\\icon"):format(name),
+    OnClick = function(_, button)
+      UPM:OpenConfigUI()
+    end,
+  OnTooltipShow = function(tt)
+    tt:AddLine("Unified Profile Manager")
+    local icon = ("|TInterface\\AddOns\\%s\\media\\NPE_LeftClick.blp:18:18:0:0:0.980957:0.996582:0.0341797:0.0654297|t")
+      :format(name)
+    tt:AddLine(icon .. " to manage your profiles", 1, 1, 1)
+  end,
+  })
 end
 
-function UPM:ADDON_LOADED()
+function UPM:ADDON_LOADED(...)
+  if name ~= ... then return; end
   if NumyProfiler then
     --- @type NumyProfiler
     local NumyProfiler = NumyProfiler;
@@ -104,12 +153,16 @@ function UPM:ADDON_LOADED()
     AceConfig:RegisterOptionsTable(name, self:GetOptionsTable());
     panel:Hide();
     panel:Show();
-    RunNextFrame(function() ignoreHook = false; end);
+    timer:ScheduleTimer(function() ignoreHook = false; end, 0.01);
   end);
 
   _G.SLASH_UNIFIED_PROFILE_MANAGER1 = '/upm';
   _G.SLASH_UNIFIED_PROFILE_MANAGER2 = '/profiles';
   SlashCmdList['UNIFIED_PROFILE_MANAGER'] = function() UPM:OpenConfigUI(); end;
+  self.db.minimap = self.db.minimap or { hide = false, minimapPos = 225 }
+  if LDBIcon and broker then
+    LDBIcon:Register("UnifiedProfileManager", broker, self.db.minimap)
+  end
 end
 
 function UPM:OpenConfigUI()
@@ -118,7 +171,7 @@ function UPM:OpenConfigUI()
   local container = AceConfigDialog.OpenFrames[name];
   if not container or not container.frame then return; end
   container:SetTitle('Unified Profile Manager');
-  container.SetTitle = nop;
+  container.SetTitle = noop;
   local frame = container.frame;
   frame:SetMovable(true);
   frame:SetScript('OnMouseDown', function(self)
@@ -127,8 +180,8 @@ function UPM:OpenConfigUI()
   frame:SetScript('OnMouseUp', function(self)
    self:StopMovingOrSizing();
   end);
-  frame.ClearAllPoints = nop;
-  frame.SetPoint = nop;
+  frame.ClearAllPoints = noop;
+  frame.SetPoint = noop;
 end
 
 UPM.resultCache = {};
@@ -177,7 +230,7 @@ UPM.dbCache = {};
 function UPM:GetAddonNameForDB(db)
   if not self.dbCache[db] then
     local _, addonName = issecurevariable(db, 'sv');
-    _, addonName = C_AddOns.GetAddOnInfo(addonName);
+    _, addonName = GetAddOnInfo(addonName);
     self.dbCache[db] = addonName;
   end
 
@@ -196,13 +249,10 @@ do
     CHARACTER_MAGIC_KEY,
     CHARACTER_REALM_MAGIC_KEY,
   };
-  local classNameFormat = '|Tinterface/icons/classicon_%s:16|t %s';
-  for classID = 1, GetNumClasses() do
-    local className, classFilename = GetClassInfo(classID);
-    if className then
-      defaultProfilesProto[classFilename] = classNameFormat:format(classFilename, className);
-      table.insert(defaultProfilesOrder, classFilename);
-    end
+  local classNameFormat = '|TInterface\\Icons\\ClassIcon_%s:16|t %s'
+  for classFilename, className in pairs(LOCALIZED_CLASS_NAMES_MALE) do
+    defaultProfilesProto[classFilename] = classNameFormat:format(classFilename, className)
+    table.insert(defaultProfilesOrder, classFilename)
   end
 
   local defaultProfileCache = {};
@@ -512,6 +562,24 @@ function UPM:GetOptionsTable(skipAddons)
             set = setOption,
             width = 'double',
           },
+          showMinimapIcon = {
+            type  = 'toggle',
+            name  = 'Show minimap icon',
+            order = increment(),
+            get = function() return self.db.minimap and not self.db.minimap.hide end,
+            set = function(_, v)
+              self.db.minimap = self.db.minimap or {}
+              self.db.minimap.hide = not v
+              if LDBIcon then
+                if v then
+                  LDBIcon:Show("UnifiedProfileManager")
+                else
+                  LDBIcon:Hide("UnifiedProfileManager")
+                end
+              end
+            end,
+            width = 'double',
+          },
           reloadUI = {
             type = 'execute',
             name = 'Reload UI',
@@ -572,7 +640,7 @@ function UPM:GetOptionsTable(skipAddons)
       local addonName = self:GetAddonNameForDB(db);
       if duplicateAddons[addonName] then
         local savedVariableName = self:FindGlobal(db.sv);
-        addonName = addonName .. (savedVariableName and WHITE_FONT_COLOR:WrapTextInColorCode(' ('..savedVariableName..')') or '');
+        addonName = addonName .. (savedVariableName and "|cffffffff" .. ' ('..savedVariableName..')' .. "|r" or '');
       end
 
       table.insert(addonNames, addonName);
