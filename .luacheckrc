@@ -1,13 +1,7 @@
 std = "lua51"
 max_line_length = false
 exclude_files = {
-	"WeakAuras_Main.lua",
-	"WeakAuras_Options.lua",
-	"WeakAuras_Templates.lua",
-	"WeakAuras/Libs/",
-	"WeakAurasOptions/Libs/",
-	"WeakAuras/Locales",
-	"WeakAurasOptions/Locales",
+	"UnifiedProfileManager/libs",
 	".luacheckrc",
 	".luarocks",
 }
