@@ -11,9 +11,7 @@ local AceConfigDialog = LibStub('AceConfigDialog-3.0');
 local LibDualSpec = LibStub('LibDualSpec-1.0', true);
 
 -- Backport Functions
-local function noop()
-
-end
+local function noop() end
 
 local function Mixin(object, ...)
   for i = 1, select("#", ...) do
@@ -57,7 +55,7 @@ local function SortAddons(name1, name2)
   return strcmputf8i(StripHyperlinks(name1), StripHyperlinks(name2)) < 0;
 end
 
-local currentCharacterName = UnitName('player')..' - '..GetRealmName();
+local currentCharacterName = UnitName('player') ..' - '.. GetRealmName();
 local DEFAULT_OPTION_KEY = 'Default';
 local L;
 do
@@ -114,9 +112,7 @@ if LDB then
     end,
   OnTooltipShow = function(tt)
     tt:AddLine("Unified Profile Manager")
-    local icon = ("|TInterface\\AddOns\\%s\\media\\NPE_LeftClick.blp:18:18:0:0:0.980957:0.996582:0.0341797:0.0654297|t")
-      :format(name)
-    tt:AddLine(icon .. " to manage your profiles", 1, 1, 1)
+    tt:AddLine("click to manage your profiles", 1, 1, 1)
   end,
   })
 end
@@ -175,10 +171,10 @@ function UPM:OpenConfigUI()
   local frame = container.frame;
   frame:SetMovable(true);
   frame:SetScript('OnMouseDown', function(self)
-   self:StartMoving();
+    self:StartMoving();
   end);
   frame:SetScript('OnMouseUp', function(self)
-   self:StopMovingOrSizing();
+    self:StopMovingOrSizing();
   end);
   frame.ClearAllPoints = noop;
   frame.SetPoint = noop;
@@ -193,7 +189,7 @@ function UPM:FindGlobal(item)
         break;
       end
     end
- end
+  end
 
   return self.resultCache[item];
 end
@@ -273,22 +269,22 @@ do
     return defaultProfiles;
   end
 
- function altHandlerPrototype:ListProfiles(info)
-   local db = self.db;
-   local characterName = info.arg;
-    local profiles = {};
-    for profile, _ in pairs(db.sv.profiles) do
-      profiles[profile] = profile;
-    end
+  function altHandlerPrototype:ListProfiles(info)
+    local db = self.db;
+    local characterName = info.arg;
+      local profiles = {};
+      for profile, _ in pairs(db.sv.profiles) do
+        profiles[profile] = profile;
+      end
 
-    for k, v in pairs(self:GetDefaultProfilesForCharacter(characterName)) do
-      profiles[k] = v;
-    end
+      for k, v in pairs(self:GetDefaultProfilesForCharacter(characterName)) do
+        profiles[k] = v;
+      end
 
-    return profiles;
- end
+      return profiles;
+  end
 
- function altHandlerPrototype:ListOrderedProfiles(info)
+  function altHandlerPrototype:ListOrderedProfiles(info)
     local db = self.db;
     local characterName = info.arg;
     local isAll = characterName == '-';
@@ -320,7 +316,7 @@ do
     return orderedProfiles;
   end
 
- function altHandlerPrototype:GetCurrentProfile(info)
+  function altHandlerPrototype:GetCurrentProfile(info)
     local db = self.db;
     local characterName = info.arg;
     local isAll = characterName == '-';
@@ -374,7 +370,7 @@ function UPM:MakeAltOptions(db)
   if not db.sv or not db.sv.profileKeys or not next(db.sv.profileKeys) then
     return nil;
   end
-  local altHandler = self.altHandlers[db] or {db = db};
+  local altHandler = self.altHandlers[db] or { db = db };
   Mixin(altHandler, altHandlerPrototype);
 
   local increment = CreateCounter(1);
@@ -446,7 +442,7 @@ function UPM:MakeAltOptions(db)
       charOption.name = characterName;
       charOption.arg = characterName;
       charOption.order = (orderedCharacterNames[characterName] or i) + offset;
-      group.args['char'..i] = charOption;
+      group.args['char' .. i] = charOption;
     end
   end
   if not next(group.args) then
@@ -456,24 +452,24 @@ function UPM:MakeAltOptions(db)
   return group;
 end
 
---- @param tbl source table
---- @param ignoredValue value that is copied raw, not recursively
---- @param copies table to store copies of tables to avoid infinite recursion
+--- @param tbl table # source table
+--- @param ignoredValue any # value that is copied raw, not recursively
+--- @param copies table? # table to store copies of tables to avoid infinite recursion
 local function DeepCopyTable(tbl, ignoredValue, copies)
   copies = copies or {}
- local copy = {};
- if copies[tbl] then
+  local copy = {};
+  if copies[tbl] then
     return copies[tbl];
   end
- copies[tbl] = copy;
- for k, v in pairs(tbl) do
-  if type(v) == 'table' and v ~= ignoredValue then
-   copy[k] = DeepCopyTable(v, ignoredValue, copies);
-  else
-   copy[k] = v;
+  copies[tbl] = copy;
+  for k, v in pairs(tbl) do
+    if type(v) == 'table' and v ~= ignoredValue then
+    copy[k] = DeepCopyTable(v, ignoredValue, copies);
+    else
+    copy[k] = v;
+    end
   end
- end
- return copy;
+  return copy;
 end
 
 function UPM:GetUnusedProfiles(db)
@@ -593,11 +589,11 @@ function UPM:GetOptionsTable(skipAddons)
             inline = true,
             order = increment(),
             args = {},
-          }
+          },
         },
-      }
+      },
     },
-  }
+  };
   if skipAddons then
     return options;
   end
@@ -640,7 +636,7 @@ function UPM:GetOptionsTable(skipAddons)
       local addonName = self:GetAddonNameForDB(db);
       if duplicateAddons[addonName] then
         local savedVariableName = self:FindGlobal(db.sv);
-        addonName = addonName .. (savedVariableName and "|cffffffff" .. ' ('..savedVariableName..')' .. "|r" or '');
+        addonName = addonName .. (savedVariableName and "|cffffffff" .. ' ('.. savedVariableName ..')' .. "|r" or '');
       end
 
       table.insert(addonNames, addonName);
